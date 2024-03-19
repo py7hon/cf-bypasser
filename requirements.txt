@@ -1,0 +1,3 @@
+CFSession==1.5.0
+flask
+bs4

@@ -53,8 +53,12 @@ def isSiteValid(url):
     response = session.session.get(url)
     return response.status_code == 200
 
-def reverse_proxy(url):
-    target_url = WEB_TARGET + url
+def reverse_proxy(url, method, headers, data, params=None):
+    if params:
+        query_string = "&".join([f"{key}={value}" for key, value in params.items()])
+        target_url = f"{WEB_TARGET}{url}?{query_string}"
+    else:
+        target_url = WEB_TARGET + url
     res = session.get(target_url)
     content = res.content.decode('utf-8')
     return content
@@ -69,13 +73,21 @@ def before_request():
 
 @app.route("/<path:path>", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
 def proxy(path):
-    res = reverse_proxy(path)
-    return Response(res)
+    headers = {key: value for (key, value) in request.headers}
+    data = request.get_data()
+    method = request.method
+    res = reverse_proxy(path, method, headers, data, request.args)
+    response = Response(res)
+    return response
 
-@app.route("/", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
+@app.route("/", methods=["GET"])
 def homeproxy():
-    res = reverse_proxy(request.path)
-    return Response(res)
+    headers = {key: value for (key, value) in request.headers}
+    data = request.get_data()
+    method = request.method
+    res = reverse_proxy(request.path, method, headers, data, request.args)
+    response = Response(res)
+    return response
 
 @app.route("/getcookie",methods=["GET"])
 def getcookie():

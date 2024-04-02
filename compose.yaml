@@ -1,0 +1,7 @@
+services:
+ web:
+    build: .
+    container_name: cf-bypasser
+    restart: unless-stopped
+    ports:
+      - 8080:8080
